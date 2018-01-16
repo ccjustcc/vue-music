@@ -1,7 +1,9 @@
 <template>
-  <div class="progress-bar" ref="progressBar" @click="progressClick">
+  <div class="progress-bar" ref="progressBar" @click="progressClick"><!--整个进度条 -->
     <div class="bar-inner">
+      <!-- 黄条 -->
       <div class="progress" ref="progress"></div>
+      <!-- 圆球 -->
       <div class="progress-btn-wrapper" ref="progressBtn"
            @touchstart.prevent="progressTouchStart"
            @touchmove.prevent="progressTouchMove"
@@ -44,10 +46,11 @@
         this._offset(offsetWidth)
       },
       progressTouchEnd() {
-        this.touch.initiated = false
+        this.touch.initiated = false;
         this._triggerPercent()
       },
       progressClick(e) {
+        //不懂
         const rect = this.$refs.progressBar.getBoundingClientRect()
         const offsetWidth = e.pageX - rect.left
         this._offset(offsetWidth)
@@ -67,10 +70,10 @@
     },
     watch: {
       percent(newPercent) {
-        if (newPercent >= 0 && !this.touch.initiated) {
-          const barWidth = this.$refs.progressBar.clientWidth - progressBtnWidth
-          const offsetWidth = newPercent * barWidth
-          this._offset(offsetWidth)
+        if (newPercent >= 0&&!this.touch.initiated){
+          const barWidth = this.$refs.progressBar.clientWidth-progressBtnWidth;
+          const offsetWidth = newPercent*barWidth;
+          this._offset(offsetWidth);
         }
       }
     }

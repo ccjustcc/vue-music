@@ -1,9 +1,5 @@
 <template>
   <div class="player" v-show="playlist.length>0">
-    <!-- <div class="normal-player" style="color:white" v-show="fullScreen">
-      player
-    </div>
-    <div class="mini-player" v-show="!fullScreen"></div> -->
    <transition name="normal"
                 @enter="enter"
                 @after-enter="afterEnter"
@@ -26,7 +22,7 @@
         <div class="middle">
           <div class="middle-l" ref="middleL">
             <div class="cd-wrapper" ref="cdWrapper">
-              <div class="cd" >
+              <div class="cd" :class="cdCls">
                 <img class="image" :src="currentSong.image" >
               </div>
             </div>
@@ -51,27 +47,28 @@
             <span class="dot" :class="{'active':currentShow==='lyric'}"></span> -->
           </div>
           <div class="progress-wrapper">
-            <!-- <span class="time time-l">{{format(currentTime)}}</span> -->
+            <span class="time time-l">{{format(currentTime)}}</span>
             <div class="progress-bar-wrapper">
-              <!-- <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar> -->
+              <v-progress-bar :percent="percent" @percentChange="onProgressBarChange"></v-progress-bar>
             </div>
-            <!-- <span class="time time-r">{{format(currentSong.duration)}}</span> -->
+            <span class="time time-r">{{format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
             <div class="icon i-left">
-              <i ></i>
+              <i class="icon-sequence"></i>
             </div>
-            <div class="icon i-left" >
-              <i  class="icon-prev"></i>
+            <div class="icon i-left"   >
+              <i  class="icon-prev" @click="prev" :class="disableCls"></i>
             </div>
             <div class="icon i-center" >
-              <i ></i>
+              <i  :class="playIcon" @click="togglePlaying"></i>
             </div>
             <div class="icon i-right" >
-              <i  class="icon-next"></i>
+              <!-- 未知道是否起效果 -->
+              <i  class="icon-next" @click="next" :class="disableCls"></i>
             </div>
             <div class="icon i-right">
-              <i  class="icon"></i>
+              <i  class="icon icon-not-favorite"></i>
             </div>
           </div>
         </div>
@@ -80,16 +77,16 @@
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click="open">
         <div class="icon">
-          <img  width="40" height="40" :src="currentSong.image">
+          <img  width="40" height="40" :src="currentSong.image" :class="cdCls">
         </div>
         <div class="text">
           <h2 class="name" v-html="currentSong.name"></h2>
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
-          <!-- <progress-circle :radius="radius" :percent="percent">
+         <v-progress-circle :radius="32" :percent="percent">
             <i @click.stop="togglePlaying" class="icon-mini" :class="miniIcon"></i>
-          </progress-circle> -->
+          </v-progress-circle> 
         </div>
         <div class="control" >
           <i class="icon-playlist"></i>
@@ -97,7 +94,10 @@
       </div>
     </transition>
     <!-- <playlist ref="playlist"></playlist> -->
-    <audio ref="audio"  ></audio>
+    <audio ref="audio" :src="currentSong.url" 
+    @canplay="ready"
+    @error="error"
+    @timeupdate="updateTime"></audio>
   </div>
 </template>
 
@@ -105,8 +105,8 @@
   import {mapGetters, mapMutations, mapActions} from 'vuex'
   import animations from 'create-keyframe-animation'
   import {prefixStyle} from 'common/js/dom'
-  // import ProgressBar from 'base/progress-bar/progress-bar'
-  // import ProgressCircle from 'base/progress-circle/progress-circle'
+  import VProgressBar from 'base/progress-bar/progress-bar'
+  import VProgressCircle from 'base/progress-circle/progress-circle'
   // import {playMode} from 'common/js/config'
   // import Lyric from 'lyric-parser'
   // import Scroll from 'base/scroll/scroll'
@@ -118,17 +118,36 @@
 
   export default {
     // mixins: [playerMixin],
+    components:{VProgressBar,VProgressCircle},
     name:'player',
     data(){
       return{
-       
+        songReady:false,
+        currentTime:0
       }
     },
     computed:{
+     cdCls() {
+        return this.playing ? 'play' : 'play pause'
+      },
+      playIcon() {
+        return this.playing ? 'icon-pause' : 'icon-play'
+      },
+      miniIcon() {
+        return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+      },
+      disableCls() {
+        return this.songReady ? '' : 'disable'
+      },
+      percent() {
+        return this.currentTime / this.currentSong.duration
+      },
       ...mapGetters([
         'fullScreen',
         'playlist',
-        'currentSong'
+        'currentSong',
+        "playing",
+        'currentIndex'
       ])
     },
     methods:{
@@ -138,7 +157,7 @@
       open(){
         this.setFullScreen(true)
       },
-       enter(el, done) {
+      enter(el, done) {
         const {x, y, scale} = this._getPosAndScale()
 
         let animation = {
@@ -165,7 +184,6 @@
         animations.runAnimation(this.$refs.cdWrapper, 'move', done)
       },
       afterEnter(){
-        console.log('dd')
         animations.unregisterAnimation('move')
         this.$refs.cdWrapper.style.animation = ''
       },
@@ -195,10 +213,90 @@
           scale
         }
       },
+      togglePlaying(){
+        this.setPlayingState(!this.playing)
+      },
+      next(){
+        if(!this.songReady){
+          return
+        }
+        let index = this.currentIndex+1;
+        if(index===this.playlist.length){
+            index = 0;
+        }
+        this.setCurrentIndex(index);
+        if (!this.playing) {
+            this.togglePlaying()
+        }
+        this.songReady = false;
+      },
+      prev(){
+        if(!this.songReady){
+          return
+        }
+        let index = this.currentIndex-1;
+        if(index<0){
+            index = this.playlist.length-1;
+        }
+        this.setCurrentIndex(index);
+        if (!this.playing) {
+            this.togglePlaying()
+        }
+        this.songReady = false;
+      },
+      ready(){
+        //现在歌曲只有一条，所以ready就是执行一次
+        this.songReady = true
+      },
+      error(){
+         this.songReady = true
+      },
+      updateTime(e){
+        this.currentTime = e.target.currentTime;
+      },
+      format(interval){
+         interval = interval | 0
+         const minute = interval / 60 | 0
+         const second = this._pad(interval % 60)
+         return `${minute}:${second}`
+
+      },
+      _pad(num,n=2){
+         let len = num.toString().length;
+         while (len < n) {
+          num = '0' + num
+          len++
+        }
+        return num;
+      },
+      onProgressBarChange(percent){
+           const currentTime = this.currentSong.duration * percent
+           this.$refs.audio.currentTime = currentTime
+           if (!this.playing) {
+           this.togglePlaying()
+           }
+      },
       ...mapMutations({
-        setFullScreen: 'SET_FULL_SCREEN'
+        setFullScreen: 'SET_FULL_SCREEN',
+        setPlayingState:'SET_PLAYING_STATE',
+        setCurrentIndex:'SET_CURRENT_INDEX'
       })
-    }
+    },
+    watch:{
+      currentSong(){
+        this.$nextTick(()=>{
+          this.$refs.audio.play();
+          //这样目前是很好的解决方法
+          // this.togglePlaying(true)
+        })
+      },
+      playing(newPlaying){
+        const audio = this.$refs.audio;
+        this.$nextTick(() => {
+          newPlaying ? audio.play() : audio.pause()
+        })
+      }
+    },
   }
 </script>
 
