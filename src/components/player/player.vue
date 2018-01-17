@@ -55,7 +55,7 @@
           </div>
           <div class="operators">
             <div class="icon i-left">
-              <i class="icon-sequence"></i>
+              <i :class="iconMode" @click="changeMode"></i>
             </div>
             <div class="icon i-left"   >
               <i  class="icon-prev" @click="prev" :class="disableCls"></i>
@@ -84,7 +84,7 @@
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
-         <v-progress-circle :radius="32" :percent="percent">
+         <v-progress-circle :radius="radius" :percent="percent">
             <i @click.stop="togglePlaying" class="icon-mini" :class="miniIcon"></i>
           </v-progress-circle> 
         </div>
@@ -97,7 +97,8 @@
     <audio ref="audio" :src="currentSong.url" 
     @canplay="ready"
     @error="error"
-    @timeupdate="updateTime"></audio>
+    @timeupdate="updateTime"
+    @ended="end"></audio>
   </div>
 </template>
 
@@ -107,7 +108,8 @@
   import {prefixStyle} from 'common/js/dom'
   import VProgressBar from 'base/progress-bar/progress-bar'
   import VProgressCircle from 'base/progress-circle/progress-circle'
-  // import {playMode} from 'common/js/config'
+  import {playMode} from 'common/js/config'
+  import {shuffle} from 'common/js/util'
   // import Lyric from 'lyric-parser'
   // import Scroll from 'base/scroll/scroll'
   // import {playerMixin} from 'common/js/mixin'
@@ -123,7 +125,8 @@
     data(){
       return{
         songReady:false,
-        currentTime:0
+        currentTime:0,
+        radius:32
       }
     },
     computed:{
@@ -142,12 +145,17 @@
       percent() {
         return this.currentTime / this.currentSong.duration
       },
+      iconMode(){
+        return this.mode === playMode.sequence?'icon-sequence':this.mode ===playMode.loop?'icon-loop':'icon-random'
+      },
       ...mapGetters([
         'fullScreen',
         'playlist',
         'currentSong',
         "playing",
-        'currentIndex'
+        'currentIndex',
+        'mode',
+        'sequenceList'
       ])
     },
     methods:{
@@ -276,18 +284,50 @@
            this.togglePlaying()
            }
       },
+      changeMode(){
+        const mode = (this.mode + 1) % 3
+        this.setPlayMode(mode)
+        let list = null;
+        if (mode === playMode.random) {
+          list = shuffle(this.sequenceList)
+        } else {
+          list = this.sequenceList
+        }
+        this.setPlayList(list)
+        this.resetCurrentIndex(list);
+      },
+      resetCurrentIndex(list){
+       let index = list.findIndex((item) => {
+          return item.id === this.currentSong.id
+        })
+       //有问题
+       this.setCurrentIndex(index)
+      },
+      end(){
+        if (this.mode === playMode.loop) {
+          this.loop()
+        } else {
+          this.next()
+        }
+      },
+      loop(){
+        this.$refs.audio.currentTime = 0
+        this.$refs.audio.play()
+      },
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN',
         setPlayingState:'SET_PLAYING_STATE',
-        setCurrentIndex:'SET_CURRENT_INDEX'
+        setCurrentIndex:'SET_CURRENT_INDEX',
+        setPlayMode:'SET_PLAY_MODE',
+        setPlayList:'SET_PLAYLIST'
       })
     },
     watch:{
-      currentSong(){
+      currentSong(newSong,oldSong){
+        // if(newSong.id === oldSong.id)
+        console.log(newSong.id)
         this.$nextTick(()=>{
           this.$refs.audio.play();
-          //这样目前是很好的解决方法
-          // this.togglePlaying(true)
         })
       },
       playing(newPlaying){

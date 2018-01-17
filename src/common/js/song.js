@@ -3,17 +3,19 @@ import {ERR_OK} from 'api/config'
 import {Base64} from 'js-base64'
 
 export default class Song {
-  constructor({id, mid, singer, name, album, duration, image, url}) {
+  constructor({id, mid, singer, name, album, duration, image,getUrl}) {
     this.id = id
     this.mid = mid
     this.singer = singer
     this.name = name
     this.album = album
-    this.duration = duration
+    // this.duration = duration
     this.image = image
-    this.url = url
+    this.getUrl= getUrl
+    this.getUrl()
+    // this.ul = url
   }
-
+  
   // getLyric() {
   //   if (this.lyric) {
   //     return Promise.resolve(this.lyric)
@@ -31,9 +33,12 @@ export default class Song {
   //   })
   // }
 }
+let durations = [274,219,259]
+let num = Math.floor(Math.random()*3);
 function getUrl(){
-   var num = Math.floor(Math.random()*3);
-   return `../../../static/music/test${num}.mp3`
+   this.num = Math.floor(Math.random()*3);
+   this.url = `../../../static/music/test${this.num}.mp3`;
+   this.duration = durations[this.num]
 }
 export function createSong(musicData) {
   return new Song({
@@ -42,9 +47,11 @@ export function createSong(musicData) {
     singer: filterSinger(musicData.singer),
     name: musicData.songname,
     album: musicData.albumname,
-    duration: musicData.interval,
+    // duration: musicData.interval,
+    // duration:duration[num],
     image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${musicData.albummid}.jpg?max_age=2592000`,
-    url: getUrl()
+    // url:getUrl(),
+    getUrl:getUrl
   })
 }
 
