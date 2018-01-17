@@ -293,14 +293,13 @@
         } else {
           list = this.sequenceList
         }
-        this.setPlayList(list)
         this.resetCurrentIndex(list);
+        this.setPlayList(list)
       },
       resetCurrentIndex(list){
        let index = list.findIndex((item) => {
           return item.id === this.currentSong.id
         })
-       //有问题
        this.setCurrentIndex(index)
       },
       end(){
@@ -324,8 +323,9 @@
     },
     watch:{
       currentSong(newSong,oldSong){
-        // if(newSong.id === oldSong.id)
-        console.log(newSong.id)
+        if(newSong.id === oldSong.id){
+          return
+        }
         this.$nextTick(()=>{
           this.$refs.audio.play();
         })
