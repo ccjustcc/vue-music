@@ -86,13 +86,14 @@ const devWebpackConfig = merge(baseWebpackConfig, {
           params: req.query
         }).then((response) => {
           var ret = response.data
-          // if (typeof ret === 'string') {
-          //   var reg = /^\w+\(({[^()]+})\)$/
-          //   var matches = ret.match(reg)
-          //   if (matches) {
-          //     ret = JSON.parse(matches[1])
-          //   }
-          // }
+          if (typeof ret === 'string') {
+            //把jsonp变为json对象
+            var reg = /^\w+\(({[^()]+})\)$/
+            var matches = ret.match(reg)
+            if (matches) {
+              ret = JSON.parse(matches[1])
+            }
+          }
           res.json(ret)
         }).catch((e) => {
           console.log(e)

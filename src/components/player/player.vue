@@ -13,14 +13,12 @@
         <div class="top">
           <div class="back" @click="back" >
             <i class="icon-back"></i>
-             <!-- @leave="leave"
-    @after-leave="afterLeave" -->
           </div>
           <h1 class="title" v-html="currentSong.name"></h1>
           <h2 class="subtitle" v-html="currentSong.singer"></h2>
         </div>
         <div class="middle">
-          <div class="middle-l" ref="middleL">
+          <div class="middle-l" ref="middleL" v-show="false">
             <div class="cd-wrapper" ref="cdWrapper">
               <div class="cd" :class="cdCls">
                 <img class="image" :src="currentSong.image" >
@@ -30,16 +28,20 @@
               <div class="playing-lyric"></div>
             </div>
           </div>
-          <!-- <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
-            <div class="lyric-wrapper">
-              <div v-if="currentLyric">
-                <p ref="lyricLine"
-                   class="text"
-                   :class="{'current': currentLineNum ===index}"
-                   v-for="(line,index) in currentLyric.lines">{{line.txt}}</p>
-              </div>
-            </div>
-          </scroll> -->
+          <!-- <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">-->
+             
+          <!-- </scroll> -->
+          <v-scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
+            <div class="lyric-wrapper" style="font-size:14px"> 
+                <div v-if="currentLyric">
+                  <p ref="lyricLine"
+                    class="text"
+                    v-for="(line,index) in currentLyric.lines"
+                    :class="{'current':currentLineNum === index}"
+                    :key="index">{{line.txt}}</p>
+                </div>
+              </div> 
+            </v-scroll>
         </div>
         <div class="bottom">
           <div class="dot-wrapper">
@@ -110,8 +112,8 @@
   import VProgressCircle from 'base/progress-circle/progress-circle'
   import {playMode} from 'common/js/config'
   import {shuffle} from 'common/js/util'
-  // import Lyric from 'lyric-parser'
-  // import Scroll from 'base/scroll/scroll'
+  import Lyric from 'lyric-parser'
+  import VScroll from 'base/scroll/scroll'
   // import {playerMixin} from 'common/js/mixin'
   // import Playlist from 'components/playlist/playlist'
 
@@ -120,13 +122,15 @@
 
   export default {
     // mixins: [playerMixin],
-    components:{VProgressBar,VProgressCircle},
+    components:{VProgressBar,VProgressCircle,VScroll},
     name:'player',
     data(){
       return{
         songReady:false,
         currentTime:0,
-        radius:32
+        radius:32,
+        currentLyric:'',
+        currentLineNum:0
       }
     },
     computed:{
@@ -313,6 +317,25 @@
         this.$refs.audio.currentTime = 0
         this.$refs.audio.play()
       },
+      getLyric(){
+        this.currentSong.getLyric().then((lyric)=>{
+          this.currentLyric = new Lyric(lyric,this.handleLyric);
+          if (this.playing) {
+            this.currentLyric.play()
+          }
+          console.log(this.currentLyric);
+        })
+      },
+      handleLyric({lineNum, txt}) {
+        this.currentLineNum = lineNum
+        // if (lineNum > 5) {
+        //   let lineEl = this.$refs.lyricLine[lineNum - 5]
+        //   this.$refs.lyricList.scrollToElement(lineEl, 1000)
+        // } else {
+        //   this.$refs.lyricList.scrollTo(0, 0, 1000)
+        // }
+        // this.playingLyric = txt
+      },
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN',
         setPlayingState:'SET_PLAYING_STATE',
@@ -328,7 +351,7 @@
         }
         this.$nextTick(()=>{
           this.$refs.audio.play();
-          this.currentSong.getLyric();
+          this.getLyric();
         })
       },
       playing(newPlaying){
