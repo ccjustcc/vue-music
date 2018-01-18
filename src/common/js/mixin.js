@@ -12,6 +12,7 @@ export const playlistMixin = {
     this.handlePlaylist(this.playlist)
   },
   activated() {
+    //keep-alive 组件激活时调用。
     this.handlePlaylist(this.playlist)
   },
   watch: {
@@ -22,7 +23,7 @@ export const playlistMixin = {
   methods: {
     handlePlaylist() {
       throw new Error('component must implement handlePlaylist method')
-    }
+    },
   }
 }
 

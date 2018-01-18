@@ -29,7 +29,7 @@
               </div>
             </div>
             <div class="playing-lyric-wrapper">
-              <div class="playing-lyric"></div>
+              <div class="playing-lyric">{{playingLyric}}</div>
             </div>
           </div>
           <v-scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
@@ -115,14 +115,14 @@
   import {shuffle} from 'common/js/util'
   import Lyric from 'lyric-parser'
   import VScroll from 'base/scroll/scroll'
-  // import {playerMixin} from 'common/js/mixin'
+  import {playerMixin} from 'common/js/mixin'
   // import Playlist from 'components/playlist/playlist'
 
   const transform = prefixStyle('transform')
   const transitionDuration = prefixStyle('transitionDuration')
 
   export default {
-    // mixins: [playerMixin],
+    mixins: [playerMixin],
     components:{VProgressBar,VProgressCircle,VScroll},
     name:'player',
     data(){
@@ -133,6 +133,7 @@
         currentLyric:null,
         currentLineNum:0,
         currentShow: 'cd',
+        playingLyric:''
       }
     },
     computed:{
@@ -243,6 +244,9 @@
         if(!this.songReady){
           return
         }
+        if(this.playlist.length ===1){
+          this.loop()
+        }else{
         let index = this.currentIndex+1;
         if(index===this.playlist.length){
             index = 0;
@@ -250,20 +254,24 @@
         this.setCurrentIndex(index);
         if (!this.playing) {
             this.togglePlaying()
-        }
+        }}
         this.songReady = false;
       },
       prev(){
         if(!this.songReady){
           return
         }
-        let index = this.currentIndex-1;
-        if(index<0){
-            index = this.playlist.length-1;
-        }
-        this.setCurrentIndex(index);
-        if (!this.playing) {
-            this.togglePlaying()
+        if(this.playlist.length ===1){
+          this.loop()
+        }else{
+          let index = this.currentIndex-1;
+          if(index<0){
+              index = this.playlist.length-1;
+          }
+          this.setCurrentIndex(index);
+          if (!this.playing) {
+              this.togglePlaying()
+          }
         }
         this.songReady = false;
       },
@@ -298,6 +306,9 @@
            if (!this.playing) {
            this.togglePlaying()
            }
+           if(this.currentLyric){
+             this.currentLyric.seek(currentTime*1000)
+           }
       },
       changeMode(){
         const mode = (this.mode + 1) % 3
@@ -327,6 +338,9 @@
       loop(){
         this.$refs.audio.currentTime = 0
         this.$refs.audio.play()
+        if(this.currentLyric){
+          this.currentLyric.seek(0);
+        }
       },
       getLyric(){
         this.currentSong.getLyric().then((lyric)=>{
@@ -334,6 +348,10 @@
           if (this.playing) {
             this.currentLyric.play()
           }
+        }).catch(()=>{
+          this.currentLyric = null;
+          this.playingLyric = '';
+          this.currentLineNum = 0;
         })
       },
       handleLyric({lineNum, txt}) {
@@ -424,10 +442,11 @@
         if(this.currentLyric){
           this.currentLyric.stop();
         }
-        this.$nextTick(()=>{
+        setTimeout(()=>{
           this.$refs.audio.play();
           this.getLyric();
-        })
+          //微信延后?
+        },1000)
       },
       playing(newPlaying){
         const audio = this.$refs.audio;
