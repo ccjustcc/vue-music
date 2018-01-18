@@ -5,7 +5,7 @@ export function getLyric(mid) {
   const url = '/api/lyric'
 
   const data = Object.assign({}, commonParams, {
-    songmid: mid,
+    songmid: mid,//这个是要查询时候使用的songmid
     platform: 'yqq',
     hostUin: 0,
     needNewCode: 0,
@@ -19,4 +19,16 @@ export function getLyric(mid) {
   }).then((res) => {
     return Promise.resolve(res.data)
   })
+}
+export function getMusicUrl(mid){
+  const url = '/api/getvkey';
+  const data ={
+    songmid : mid ,
+    filename:`C400${mid}.m4a`
+  }
+  return axios.get(url, {
+    params: data
+  }).then((res) => {
+    return Promise.resolve(res.data)
+  }) 
 }

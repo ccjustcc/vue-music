@@ -1,4 +1,4 @@
-import {getLyric} from 'api/song'
+import {getLyric,getMusicUrl} from 'api/song'
 import {ERR_OK} from 'api/config'
 import {Base64} from 'js-base64'
 
@@ -9,7 +9,7 @@ export default class Song {
     this.singer = singer
     this.name = name
     this.album = album
-    // this.duration = duration
+    this.duration = duration
     this.image = image
     this.getUrl= getUrl
     this.getUrl()
@@ -51,10 +51,24 @@ export default class Song {
 }
 let durations = [274,219,259]
 let num = Math.floor(Math.random()*3);
+//这个函数也变得没有意义了
+function _getGuid(){
+  let t = (new Date).getUTCMilliseconds()
+  return Math.round(2147483647 * Math.random()) * t % 1e10
+}
 function getUrl(){
-   this.num = Math.floor(Math.random()*3);
-   this.url = `../../../static/music/test${this.num}.mp3`;
-   this.duration = durations[this.num]
+   let vkey = '';
+   let guid = 8757676107 ;//这个要和getvkey中的guid一致
+   let filename = `C400${this.mid}.m4a`;
+   getMusicUrl(this.mid).then((res)=>{
+    if(res.code === ERR_OK){
+      vkey = res.data.items[0].vkey;
+      let url = `http://dl.stream.qqmusic.qq.com/${filename}?vkey=${vkey}&guid=${guid}&uin=0&fromtag=66`;
+      this.url=url;
+    }else{
+      console.log('wrong')
+    }
+   })
 }
 export function createSong(musicData) {
   return new Song({
@@ -63,10 +77,8 @@ export function createSong(musicData) {
     singer: filterSinger(musicData.singer),
     name: musicData.songname,
     album: musicData.albumname,
-    // duration: musicData.interval,
-    // duration:duration[num],
+    duration: musicData.interval,
     image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${musicData.albummid}.jpg?max_age=2592000`,
-    // url:getUrl(),
     getUrl:getUrl
   })
 }

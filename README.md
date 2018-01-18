@@ -19,3 +19,6 @@ npm run build --report
 ```
 
 For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+
+## 留个坑先
+暂时解决音乐接口问题，在请求具体音乐的接口中，guid没有用算法生成，直接用固定的
