@@ -6,7 +6,7 @@
   </div>
 </template>
 
-<script type="text/ecmascript-6">
+<script >
   import {debounce} from 'common/js/util'
 
   export default {
@@ -33,9 +33,9 @@
       }
     },
     created() {
-      this.$watch('query', debounce((newQuery) => {
+      this.$watch('query', (newQuery) => {
         this.$emit('query', newQuery)
-      }, 200))
+      })
     }
   }
 </script>

@@ -1,9 +1,9 @@
 <template>
   <div class="rank" ref="rank">
-    <scroll :data="topList" class="toplist" ref="toplist">
+    <v-scroll  class="toplist" ref="toplist" :data="topList">
       <ul>
-        <li @click="selectItem(item)" class="item" v-for="item in topList">
-          <div class="icon">
+        <li  class="item" v-for="item in topList " @click="selectItem(item)"> 
+         <div class="icon">
             <img width="100" height="100" v-lazy="item.picUrl"/>
           </div>
           <ul class="songlist">
@@ -14,17 +14,17 @@
           </ul>
         </li>
       </ul>
-      <div class="loading-container" v-show="!topList.length">
-        <loading></loading>
+      <div class="loading-container" >
+        <v-loading v-show="!topList.length"></v-loading>
       </div>
-    </scroll>
+    </v-scroll>
     <router-view></router-view>
   </div>
 </template>
 
-<script type="text/ecmascript-6">
-  import Scroll from 'base/scroll/scroll'
-  import Loading from 'base/loading/loading'
+<script >
+  import VScroll from 'base/scroll/scroll'
+  import VLoading from 'base/loading/loading'
   import {getTopList} from 'api/rank'
   import {ERR_OK} from 'api/config'
   import {playlistMixin} from 'common/js/mixin'
@@ -51,6 +51,7 @@
         this.$router.push({
           path: `/rank/${item.id}`
         })
+        console.log(item)
         this.setTopList(item)
       },
       _getTopList() {
@@ -64,16 +65,16 @@
         setTopList: 'SET_TOP_LIST'
       })
     },
-    watch: {
-      topList() {
-        setTimeout(() => {
-          this.$Lazyload.lazyLoadHandler()
-        }, 20)
-      }
-    },
+    // watch: {
+    //   topList() {
+    //     setTimeout(() => {
+    //       this.$Lazyload.lazyLoadHandler()
+    //     }, 20)
+    //   }
+    // },
     components: {
-      Scroll,
-      Loading
+      VScroll,
+      VLoading
     }
   }
 </script>

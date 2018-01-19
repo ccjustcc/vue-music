@@ -24,7 +24,7 @@
     :probe-type="probeType"
     @scroll="scroll">
         <div class="song-list-wrapper">
-           <v-song-list :songs="songs" @select="selectItem"></v-song-list>
+           <v-song-list :songs="songs" @select="selectItem" :rank="rank"></v-song-list>
         </div>
         <div v-show="!songs.length" class="loading-container">
           <v-loading></v-loading>

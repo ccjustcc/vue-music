@@ -2,7 +2,8 @@
   <transition name="slide">
     <v-music-list
     :title="title"
-    :bgImage="bgImage         "
+    :bgImage="bgImage"
+    :songs="songs"
     ></v-music-list>
   </transition>
 </template>
@@ -16,6 +17,11 @@
 
   export default {
     name:'disc',
+    data(){
+      return {
+        songs:[]
+      }
+    },
     computed:{
      title() {
         return this.disc.dissname
@@ -30,12 +36,23 @@
     },
     methods:{
       _getSongList(){
+        if(!this.disc.dissid){
+          this.$router.back()
+        }
         getSongList(this.disc.dissid).then((res) => {
           if (res.code === ERR_OK) {
-             console.log(res.cdlist.songlist)
-            // this.songs = this._normalizeSongs(res.cdlist[0].songlist)
+            this.songs = this._normalizeSongs(res.cdlist[0].songlist)
           }
         })
+      },
+      _normalizeSongs(list){
+        let ret = []
+        list.forEach((musicData) => {
+          if (musicData.songid && musicData.albummid) {
+            ret.push(createSong(musicData))
+          }
+        })
+        return ret
       }
     },
     components: {
