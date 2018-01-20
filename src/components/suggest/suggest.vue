@@ -1,32 +1,32 @@
 <template>
-  <scroll ref="suggest"
+  <v-scroll ref="suggest"
           class="suggest"
           :data="result"
           :pullup="pullup"
-          :beforeScroll="beforeScroll"
           @scrollToEnd="searchMore"
+          :beforeScroll="beforeScroll"
           @beforeScroll="listScroll"
-  >
+  >       
     <ul class="suggest-list">
-      <li @click="selectItem(item)" class="suggest-item" v-for="item in result">
+      <li class="suggest-item" v-for="item in result" @click="selectItem(item)">
         <div class="icon">
-          <i :class="getIconCls(item)"></i>
+          <i :class="getIconClass(item)"></i>
         </div>
         <div class="name">
           <p class="text" v-html="getDisplayName(item)"></p>
         </div>
       </li>
-      <loading v-show="hasMore" title=""></loading>
+      <v-loading v-show="hasMore" title=""></v-loading>
     </ul>
     <div v-show="!hasMore && !result.length" class="no-result-wrapper">
       <no-result title="抱歉，暂无搜索结果"></no-result>
     </div>
-  </scroll>
+  </v-scroll>
 </template>
 
-<script type="text/ecmascript-6">
-  import Scroll from 'base/scroll/scroll'
-  import Loading from 'base/loading/loading'
+<script >
+  import VScroll from 'base/scroll/scroll'
+  import VLoading from 'base/loading/loading'
   import NoResult from 'base/no-result/no-result'
   import {search} from 'api/search'
   import {ERR_OK} from 'api/config'
@@ -58,36 +58,10 @@
       }
     },
     methods: {
-      refresh() {
-        this.$refs.suggest.refresh()
+      listScroll(){
+        this.$emit('listScroll');
       },
-      search() {
-        this.page = 1
-        this.hasMore = true
-        this.$refs.suggest.scrollTo(0, 0)
-        search(this.query, this.page, this.showSinger, perpage).then((res) => {
-          if (res.code === ERR_OK) {
-            this.result = this._genResult(res.data)
-            this._checkMore(res.data)
-          }
-        })
-      },
-      searchMore() {
-        if (!this.hasMore) {
-          return
-        }
-        this.page++
-        search(this.query, this.page, this.showSinger, perpage).then((res) => {
-          if (res.code === ERR_OK) {
-            this.result = this.result.concat(this._genResult(res.data))
-            this._checkMore(res.data)
-          }
-        })
-      },
-      listScroll() {
-        this.$emit('listScroll')
-      },
-      selectItem(item) {
+      selectItem(item){
         if (item.type === TYPE_SINGER) {
           const singer = new Singer({
             id: item.singermid,
@@ -102,29 +76,46 @@
         }
         this.$emit('select', item)
       },
-      getDisplayName(item) {
-        if (item.type === TYPE_SINGER) {
-          return item.singername
-        } else {
-          return `${item.name}-${item.singer}`
-        }
+      refresh() {
+        this.$refs.suggest.refresh()
       },
-      getIconCls(item) {
-        if (item.type === TYPE_SINGER) {
+      search() {
+        this.page = 1
+        this.hasMore = true
+        this.$refs.suggest.scrollTo(0, 0)
+        search(this.query, this.page, this.showSinger, perpage).then((res) => {
+          if (res.code === ERR_OK) {
+            this.result = this._genResult(res.data)
+            //对于结果做判断，是否是最后一个
+            this._checkMore(res.data)
+          }
+        })
+      },
+      searchMore(){
+        if(!this.hasMore){
+          return
+        }
+        this.page++
+        search(this.query, this.page, this.showSinger, perpage).then((res) => {
+          if (res.code === ERR_OK) {
+            this.result = this.result.concat(this._genResult(res.data))
+            this._checkMore(res.data)
+          }
+        })
+      },
+      getIconClass(item){
+         if (item.type === TYPE_SINGER) {
           return 'icon-mine'
         } else {
           return 'icon-music'
         }
       },
-      _genResult(data) {
-        let ret = []
-        if (data.zhida && data.zhida.singerid) {
-          ret.push({...data.zhida, ...{type: TYPE_SINGER}})
+      getDisplayName(item){
+        if (item.type === TYPE_SINGER) {
+          return item.singername
+        } else {
+          return `${item.name}-${item.singer}`
         }
-        if (data.song) {
-          ret = ret.concat(this._normalizeSongs(data.song.list))
-        }
-        return ret
       },
       _normalizeSongs(list) {
         let ret = []
@@ -135,11 +126,23 @@
         })
         return ret
       },
-      _checkMore(data) {
+      _checkMore(data){
         const song = data.song
+        //看返回数据算的
         if (!song.list.length || (song.curnum + song.curpage * perpage) > song.totalnum) {
           this.hasMore = false
         }
+      },
+      _genResult(data){
+        let ret = [];
+       
+        if(data.zhida&&data.zhida.singerid){
+          ret.push({...data.zhida,...{type:TYPE_SINGER}})
+        }
+        if(data.song){
+          ret = ret.concat(this._normalizeSongs(data.song.list))
+        }
+        return ret
       },
       ...mapMutations({
         setSinger: 'SET_SINGER'
@@ -154,8 +157,8 @@
       }
     },
     components: {
-      Scroll,
-      Loading,
+      VScroll,
+      VLoading,
       NoResult
     }
   }

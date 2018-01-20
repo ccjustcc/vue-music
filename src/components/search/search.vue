@@ -1,7 +1,8 @@
 <template>
   <div class="search">
-    <v-search-box ref="searchbox"></v-search-box>
-    <div class="shortcut-wrapper">
+    <v-search-box ref="searchbox" 
+    @query="onQueryChange"></v-search-box>
+    <div class="shortcut-wrapper" v-show="!query">
        <div class="shortcut">
        <div class="hot-key">
           <h1 class="title">热门搜索</h1>
@@ -13,31 +14,48 @@
        </div>
        </div>
     </div>
+    <div class="search-result" v-show="query">
+      <v-suggest :query="query" :listScroll="blurInput" @select="saveSearch"></v-suggest>
+    </div>
+   <div class="search-history" v-show="searchHistory.length">
+            <h1 class="title">
+              <span class="text">搜索历史</span>
+              <span  class="clear">
+                <i class="icon-clear"></i>
+              </span>
+            </h1>
+            <v-search-list  :searches="searchHistory"></v-search-list>
+    </div>
+    <router-view></router-view>
   </div>
 </template>
 
 <script >
   import VSearchBox from 'base/search-box/search-box'
-  // import SearchList from 'base/search-list/search-list'
+  import VSearchList from 'base/search-list/search-list'
   // import Scroll from 'base/scroll/scroll'
   // import Confirm from 'base/confirm/confirm'
-  // import Suggest from 'components/suggest/suggest'
+  import VSuggest from 'components/suggest/suggest'
   import {getHotKey} from 'api/search'
   import {ERR_OK} from 'api/config'
   // import {playlistMixin, searchMixin} from 'common/js/mixin'
-  // import {mapActions} from 'vuex'
+  import {mapActions,mapGetters} from 'vuex'
 
   export default {
     // mixins: [playlistMixin, searchMixin],
     data() {
       return {
-        hotKey: []
+        hotKey: [],
+        query:''
       }
     },
     computed: {
       shortcut() {
         // return this.hotKey.concat(this.searchHistory)
-      }
+      },
+      ...mapGetters([
+        'searchHistory'
+      ])
     },
     created() {
       this._getHotKey()
@@ -45,6 +63,9 @@
     methods: {
         addQuery(query){
           this.$refs.searchbox.setQuery(query)
+        },
+        onQueryChange(query){
+          this.query = query
         },
     //   handlePlaylist(playlist) {
     //     const bottom = playlist.length > 0 ? '60px' : ''
@@ -58,17 +79,22 @@
     //   showConfirm() {
     //     this.$refs.confirm.show()
     //   },
-     
+      saveSearch(){
+        this.saveSearchHistory(this.query)
+      },
       _getHotKey() {
         getHotKey().then((res) => {
           if (res.code === ERR_OK) {
             this.hotKey = res.data.hotkey.slice(0, 10)
           }
         })
-      }
-    //   ...mapActions([
-    //     'clearSearchHistory'
-    //   ])
+      },
+      blurInput(){
+        this.$refs.searchbox.blur();
+      },
+      ...mapActions([
+        'saveSearchHistory'
+      ])
     },
     // watch: {
     //   query(newQuery) {
@@ -80,7 +106,7 @@
     //   }
     // },
     components: {
-      VSearchBox
+      VSearchBox,VSuggest,VSearchList
     }
   }
 </script>

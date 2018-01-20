@@ -15,8 +15,10 @@ function insertArray(arr, val, compare, maxLen) {
     return
   }
   if (index > 0) {
+     //先删除
     arr.splice(index, 1)
   }
+  //头部插入
   arr.unshift(val)
   if (maxLen && arr.length > maxLen) {
     arr.pop()
