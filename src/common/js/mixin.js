@@ -54,29 +54,29 @@ export const playerMixin = {
       this.setPlaylist(list)
     },
     resetCurrentIndex(list) {
-      let index = list.findIndex((item) => {
-        return item.id === this.currentSong.id
-      })
-      this.setCurrentIndex(index)
+      // let index = list.findIndex((item) => {
+      //   return item.id === this.currentSong.id
+      // })
+      // this.setCurrentIndex(index)
     },
     toggleFavorite(song) {
-      if (this.isFavorite(song)) {
-        this.deleteFavoriteList(song)
-      } else {
-        this.saveFavoriteList(song)
-      }
+      // if (this.isFavorite(song)) {
+      //   this.deleteFavoriteList(song)
+      // } else {
+      //   this.saveFavoriteList(song)
+      // }
     },
     getFavoriteIcon(song) {
-      if (this.isFavorite(song)) {
-        return 'icon-favorite'
-      }
-      return 'icon-not-favorite'
+      // if (this.isFavorite(song)) {
+      //   return 'icon-favorite'
+      // }
+      // return 'icon-not-favorite'
     },
     isFavorite(song) {
-      const index = this.favoriteList.findIndex((item) => {
-        return item.id === song.id
-      })
-      return index > -1
+      // const index = this.favoriteList.findIndex((item) => {
+      //   return item.id === song.id
+      // })
+      // return index > -1
     },
     ...mapMutations({
       setPlayMode: 'SET_PLAY_MODE',

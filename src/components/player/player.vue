@@ -91,7 +91,7 @@
             <i @click.stop="togglePlaying" class="icon-mini" :class="miniIcon"></i>
           </v-progress-circle> 
         </div>
-        <div class="control" >
+        <div class="control" @click="showPlayList" >
           <i class="icon-playlist"></i>
         </div>
       </div>
@@ -102,6 +102,7 @@
     @error="error"
     @timeupdate="updateTime"
     @ended="end"></audio>
+    <v-play-list ref="playList"></v-play-list>
   </div>
 </template>
 
@@ -116,14 +117,14 @@
   import Lyric from 'lyric-parser'
   import VScroll from 'base/scroll/scroll'
   import {playerMixin} from 'common/js/mixin'
-  // import Playlist from 'components/playlist/playlist'
+  import VPlayList from 'components/playlist/playlist'
 
   const transform = prefixStyle('transform')
   const transitionDuration = prefixStyle('transitionDuration')
 
   export default {
     mixins: [playerMixin],
-    components:{VProgressBar,VProgressCircle,VScroll},
+    components:{VProgressBar,VProgressCircle,VScroll,VPlayList},
     name:'player',
     data(){
       return{
@@ -426,6 +427,9 @@
         this.$refs.middleL.style[transitionDuration] = `${time}ms`
         this.touch.initiated = false
       },
+      showPlayList(){
+        this.$refs.playList.show()
+      },
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN',
         setPlayingState:'SET_PLAYING_STATE',
@@ -436,6 +440,9 @@
     },
     watch:{
       currentSong(newSong,oldSong){
+        if(!newSong.id){
+          return
+        }
         if(newSong.id === oldSong.id){
           return
         }
