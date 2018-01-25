@@ -71,7 +71,7 @@
               <i  class="icon-next" @click="next" :class="disableCls"></i>
             </div>
             <div class="icon i-right">
-              <i  class="icon icon-not-favorite"></i>
+              <i  class="icon" :class="getFavoriteIcon(currentSong)" @click="toggleFavorite(currentSong)"></i>
             </div>
           </div>
         </div>
@@ -96,7 +96,6 @@
         </div>
       </div>
     </transition>
-    <!-- <playlist ref="playlist"></playlist> -->
     <audio ref="audio" :src="currentSong.url" 
     @canplay="ready"
     @error="error"
@@ -106,7 +105,7 @@
   </div>
 </template>
 
-<script type="text/ecmascript-6">
+<script>
   import {mapGetters, mapMutations, mapActions} from 'vuex'
   import animations from 'create-keyframe-animation'
   import {prefixStyle} from 'common/js/dom'
@@ -279,6 +278,7 @@
       ready(){
         //现在歌曲只有一条，所以ready就是执行一次
         this.songReady = true
+        this.savePlayHistory(this.currentSong)
       },
       error(){
          this.songReady = true
@@ -430,6 +430,9 @@
       showPlayList(){
         this.$refs.playList.show()
       },
+      ...mapActions([
+        'savePlayHistory'
+      ]),
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN',
         setPlayingState:'SET_PLAYING_STATE',
@@ -448,8 +451,12 @@
         }
         if(this.currentLyric){
           this.currentLyric.stop();
+          this.currentTime = 0;
+          this.playingLyric = '';
+          this.currentLineNum = 0 
         }
-        setTimeout(()=>{
+       clearTimeout(this.timer); 
+       this.timer = setTimeout(()=>{ 
           this.$refs.audio.play();
           this.getLyric();
           //微信延后?

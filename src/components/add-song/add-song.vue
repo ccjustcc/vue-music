@@ -13,18 +13,22 @@
       <div class="shortcut" v-show="!query">
         <switches :switches="switches" :currentIndex="currentIndex" @switch="switchItem"></switches>
         <div class="list-wrapper">
+          <!-- 播放列表 -->
           <scroll ref="songList" v-if="currentIndex===0" class="list-scroll" :data="playHistory">
             <div class="list-inner">
               <song-list :songs="playHistory" @select="selectSong">
               </song-list>
             </div>
           </scroll>
+          <!-- 播放列表 -->
+          <!-- 搜索历史 -->
           <scroll :refreshDelay="refreshDelay" ref="searchList" v-if="currentIndex===1" class="list-scroll"
                   :data="searchHistory">
             <div class="list-inner">
               <search-list @delete="deleteSearchHistory" @select="addQuery" :searches="searchHistory"></search-list>
             </div>
           </scroll>
+          <!-- 搜索历史 -->
         </div>
       </div>
       <div class="search-result" v-show="query">
@@ -40,7 +44,7 @@
   </transition>
 </template>
 
-<script type="text/ecmascript-6">
+<script >
   import SearchBox from 'base/search-box/search-box'
   import SongList from 'base/song-list/song-list'
   import SearchList from 'base/search-list/search-list'
@@ -78,14 +82,22 @@
     methods: {
       show() {
         this.showFlag = true
-        // 
-        
+        // 标签用上了不管v-show or v-if 都会执行改组件。所以这里需要如下在调用show的时候
+        //重新执行一遍scroll组件的refresh方法
+        setTimeout(() => {
+          if (this.currentIndex === 0) {
+            this.$refs.songList.refresh()
+          } else {
+            this.$refs.searchList.refresh()
+          }
+        }, 20)
       },
       hide() {
         this.showFlag = false
       },
       selectSong(song, index) {
         if (index !== 0) {
+          //缓存中取出来的只是个对象还不是
           this.insertSong(new Song(song))
           this.$refs.topTip.show()
         }
