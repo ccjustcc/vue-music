@@ -97,7 +97,7 @@
       </div>
     </transition>
     <audio ref="audio" :src="currentSong.url" 
-    @canplay="ready"
+    @play="ready"
     @error="error"
     @timeupdate="updateTime"
     @ended="end"></audio>
@@ -246,6 +246,7 @@
         }
         if(this.playlist.length ===1){
           this.loop()
+          return 
         }else{
         let index = this.currentIndex+1;
         if(index===this.playlist.length){
@@ -274,7 +275,7 @@
           }
         }
         this.songReady = false;
-      },
+      },  
       ready(){
         //现在歌曲只有一条，所以ready就是执行一次
         this.songReady = true
@@ -345,6 +346,9 @@
       },
       getLyric(){
         this.currentSong.getLyric().then((lyric)=>{
+          if(this.currentSong.lyric!== lyric){
+            return
+          }
           this.currentLyric = new Lyric(lyric,this.handleLyric);
           if (this.playing) {
             this.currentLyric.play()
